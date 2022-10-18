@@ -1,5 +1,6 @@
 use embassy_time::{Duration, Timer};
 use esp_idf_hal::task::executor::EspExecutor;
+use esp_idf_hal::task::thread::ThreadSpawnConfiguration;
 use esp_idf_sys::{self as sys, esp, EspError};
 
 sys::esp_app_desc!();
@@ -31,16 +32,28 @@ fn init() -> Result<(), EspError> {
 }
 
 fn run() -> Result<(), EspError> {
-    let executor = EspExecutor::<16, _>::new();
-    let tasks = [
-        executor.spawn_local(async move {
-            log::info!("starting");
-            loop {
-                Timer::after(Duration::from_secs(5)).await;
-                log::info!("woke up");
-            }
-        }).unwrap(),
-    ];
-    executor.run_tasks(|| true, tasks);
+    ThreadSpawnConfiguration {
+        name: Some(b"timer\0"),
+        ..Default::default()
+    }
+    .set()?;
+    std::thread::Builder::new()
+        .stack_size(64_000)
+        .spawn(move || {
+            let executor = EspExecutor::<8, _>::new();
+            let tasks = [executor
+                .spawn_local(async move {
+                    log::info!("starting");
+                    loop {
+                        Timer::after(Duration::from_secs(5)).await;
+                        log::info!("woke up");
+                    }
+                })
+                .unwrap()];
+            executor.run_tasks(|| true, tasks);
+        })
+        .unwrap()
+        .join()
+        .unwrap();
     Ok(())
 }
