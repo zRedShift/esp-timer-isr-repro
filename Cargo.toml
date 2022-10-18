@@ -8,6 +8,16 @@ resolver = "2"
 debug = true # Symbols are nice and they don't increase the size on Flash
 opt-level = "z"
 
+[patch.crates-io]
+esp-idf-sys = { git = "https://github.com/zRedShift/esp-idf-sys", branch = "size_t_as_usize" }
+embuild = { git = "https://github.com/zRedShift/embuild", branch = "size_t_as_usize" }
+
+[patch."https://github.com/esp-rs/esp-idf-hal"]
+esp-idf-hal = { git = "https://github.com/zRedShift/esp-idf-hal", branch = "size_t_as_usize" }
+
+[patch."https://github.com/esp-rs/esp-idf-svc"]
+esp-idf-svc = { git = "https://github.com/zRedShift/esp-idf-svc", branch = "size_t_as_usize" }
+
 [dependencies]
 embassy-time = { version = "0.1", git = "https://github.com/ivmarkov/embassy" }
 esp-idf-sys = { version = "0.31.10", features = ["binstart"] }
